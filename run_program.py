@@ -1,20 +1,20 @@
-from dotenv import load_dotenv  # Import dotenv to load .env variables
 import os  # Import os to access environment variables
 import pandas as pd
 import json
 
-from schwabdev.client import Client  # Import the Client class from schwabdev/client.py
-import schwabdev  # Import the schwabdev package to load the client module
-
-# Load environment variables from .env file
-load_dotenv()
-
+from dotenv import load_dotenv  # Import dotenv to load .env variables
+load_dotenv() # Load environment variables from .env file
 # Access the environment variables for client_id and client_secret
 client_id = os.getenv('APP_KEY')  # Get the client_id from .env
 client_secret = os.getenv('APP_SECRET')  # Get the client_secret from .env
 
-# Create a client using the credentials loaded from the .env file
+# Import the Client class from schwabdev.client local module for customization
+from schwabdev.client import Client  # Import the Client class from schwabdev/client.py
 client = Client(client_id, client_secret)  # Create an instance of the Client class
+
+# Import the schwabdev package to access the Client class
+# import schwabdev #import the package
+# client = schwabdev.Client(client_id, client_secret) #create a client
 
 # Fetch account details with positions
 response = client.account_details_all("positions").json()  # Fetch account details
