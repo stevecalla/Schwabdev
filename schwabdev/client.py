@@ -153,11 +153,19 @@ class Client:
         Returns:
             request.Response: details for all linked accounts
         """
-        return self._session.get(f'{self._base_api_url}/trader/v1/accounts/',
-                            headers={'Authorization': f'Bearer {self.tokens.access_token}'},
-                            params=self._params_parser({'fields': fields}),
-                            timeout=self.timeout)
 
+        print("Fetching account details with fields:", fields)  # Debugging
+        print(f"Fields: {fields}")  # Debugging
+
+        response = self._session.get(f'{self._base_api_url}/trader/v1/accounts/',
+                                      headers={'Authorization': f'Bearer {self.tokens.access_token}'},
+                                      params=self._params_parser({'fields': fields}),
+                                      timeout=self.timeout)
+        
+        # print(f"Response: {response.status_code}, {response.json()}")  # Debugging
+
+        return response
+    
     def account_details(self, accountHash: str, fields: str | None = None) -> requests.Response:
         """
         Specific account information with balances and positions. The balance information on these accounts is displayed by default but Positions will be returned based on the "positions" flag.
