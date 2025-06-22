@@ -127,13 +127,26 @@ df['changePricePerShare'] = df.apply(
 def adjust_long_quantity(row):
     # Check if 'CD' is in the position description and adjust the quantity
     if 'CD' in row['positionDescription']:
-        # row['longQuantity'] = row['longQuantity'] * 1000  # Modify the quantity by multiplying by 1000
-        row['averagePrice'] = 1000  # Modify total cost by multiplying by changePricePerShare
+        row['averagePrice'] = 1000  # Modify total cost for CDs to 1000 per share
+        row['changePricePerShare'] = row['averagePrice'] - row['currentMarketPrice'] # Modify Change price per share
         row['totalCost'] = row['longQuantity'] * row['averagePrice']  # Modify total cost by multiplying by changePricePerShare
     return row
 
 # Apply the adjustment function to modify 'longQuantity' directly
 df = df.apply(adjust_long_quantity, axis=1)
+
+# Add a 'Total' row by summing the relevant columns
+total_row = df[['longQuantity', 'shortQuantity', 'totalCost', 'marketValue', 'longOpenProfitLoss', 'currentDayProfitLoss']].sum(axis=0)
+total_row['accountNumber'] = 'Total'
+total_row['positionSymbol'] = ''
+total_row['positionDescription'] = ''
+total_row['positionType'] = ''
+    
+# Convert the total row into a DataFrame
+total_df = pd.DataFrame([total_row])
+
+# Concatenate the total row with the original DataFrame
+df = pd.concat([df, total_df], ignore_index=True)
 
 # Extract only the required columns for the smaller dataset
 smaller_df = df[[
@@ -174,6 +187,7 @@ smaller_df.columns = [
 # Saving as an Excel file with appropriate formatting
 try:
     file_name = "account_data_with_positions_v2.xlsx"
+
     with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
         # Write the flattened DataFrame to Excel
         smaller_df.to_excel(writer, index=False, sheet_name='Sheet1')
@@ -216,9 +230,9 @@ try:
                                           {'type': 'cell', 'criteria': '>', 'value': 0, 'format': green_format})
 
         # Adjust column widths based on the longest value in each column
-        for col_num, column in enumerate(df.columns):
-            max_len = max(df[column].astype(str).apply(len).max(), len(column))  # Get the max length of content or header
-            worksheet.set_column(col_num, col_num, max_len + 2)  # Add some padding
+        for col_num, column in enumerate(smaller_df.columns):
+            max_len = max(smaller_df[column].astype(str).apply(len).max(), len(column))  # Get the max length of content or header
+            worksheet.set_column(col_num, col_num, max_len)
 
         # Freeze the first 3 columns (A, B, C)
         worksheet.freeze_panes(0, 3)
